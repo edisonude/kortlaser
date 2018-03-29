@@ -1,0 +1,11 @@
+frmMenu = 0, 0, 0, 0, C, 26, 26, 796, 442, C
+frmInvoice = 78, 78, 848, 494, Z, 52, 52, 822, 468, C
+modConexion = 52, 52, 969, 398, 
+modFiles = 130, 130, 876, 546, C
+cClient = 26, 26, 943, 372, C
+Ap = 182, 182, 952, 598, 
+modFormater = 104, 104, 874, 520, C
+modComponents = 208, 208, 978, 624, 
+cInvoice = 26, 26, 796, 442, C
+cInvoiceDetail = 156, 156, 926, 572, C
+cInvoicePayment = 104, 104, 874, 520, C
