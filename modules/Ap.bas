@@ -6,3 +6,6 @@ Public cClient As New cClient
 
 'Instancia de factura utilitaria
 Public cInvoice As New cInvoice
+
+'Acción de busqueda
+Public Const ACT_SEARCH = 1

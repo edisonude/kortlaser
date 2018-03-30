@@ -98,7 +98,7 @@ Private Sub Label1_Click()
 End Sub
 
 Private Sub Form_Load()
-logo.Left = Screen.Width - logo.Width - 100
+logo.left = Screen.Width - logo.Width - 100
 End Sub
 
 Private Sub menu_MouseMove(Index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
@@ -112,6 +112,8 @@ End Sub
 Private Sub menuHover_Click(Index As Integer)
 Dim formToOpen As Form
 Select Case Index
+    Case 0
+        Set formToOpen = frmClient
     Case 2
         Set formToOpen = frmInvoice
 End Select
@@ -120,7 +122,7 @@ If formToOpen Is Nothing Then Exit Sub
 
 formToOpen.Show , Me
 formToOpen.Top = Me.source.Top
-formToOpen.Left = Me.source.Left
+formToOpen.left = Me.source.left
 End Sub
 
 Private Sub restoreMenu_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)

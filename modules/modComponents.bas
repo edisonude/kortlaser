@@ -176,7 +176,7 @@ End Sub
 
     'Set the width for the columns and filters
     Public Sub setWidthForColumnsAndFilters(filters, list As ListView, widthCols() As Double)
-    On Error GoTo Control
+    On Error GoTo control
         For i = 1 To UBound(widthCols)
             list.ColumnHeaders(i).Width = widthCols(i)
             filters(i).Width = widthCols(i)
@@ -190,7 +190,7 @@ continueFor:
         Next
         Exit Sub
         
-Control:
+control:
     If Err.Number = 340 Then
         GoTo continueFor
     End If
@@ -200,13 +200,13 @@ Control:
     'Clean the filter of a list
     'except: filter to except and not clean, if has -1 clean all the filters
     Public Sub cleanFilters(filters, except As Integer)
-        Components.cleaningFilters = True
-        For i = 1 To filters.Count - 1
+        modComponents.cleaningFilters = True
+        For i = 1 To filters.count - 1
             If i <> except Then
                 filters(i).Text = ""
             End If
         Next
-        Components.cleaningFilters = False
+        modComponents.cleaningFilters = False
     End Sub
     
     Public Sub filtersNoResult(picMessage As PictureBox, list As ListView, lMessage As label)
@@ -268,7 +268,7 @@ Control:
               
                 With .ListItems
                     If (Columna > 0) Then
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i).ListSubItems(Columna)
                                 .Tag = .Text & Chr$(0) & .Tag
                                 If IsDate(.Text) Then
@@ -280,7 +280,7 @@ Control:
                             End With
                         Next i
                     Else
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i)
                                 .Tag = .Text & Chr$(0) & .Tag
                                 If IsDate(.Text) Then
@@ -302,7 +302,7 @@ Control:
                   
                 With .ListItems
                     If (Columna > 0) Then
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i).ListSubItems(Columna)
                                 strData = Split(.Tag, Chr$(0))
                                 .Text = strData(0)
@@ -310,7 +310,7 @@ Control:
                             End With
                         Next i
                     Else
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i)
                                 strData = Split(.Tag, Chr$(0))
                                 .Text = strData(0)
@@ -331,7 +331,7 @@ Control:
                       
                 With .ListItems
                     If (Columna > 0) Then
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i).ListSubItems(Columna)
                                 .Tag = .Text & Chr$(0) & .Tag
                                 If IsNumeric(.Text) Then
@@ -349,7 +349,7 @@ Control:
                             End With
                         Next i
                     Else
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i)
                                 .Tag = .Text & Chr$(0) & .Tag
                                 If IsNumeric(.Text) Then
@@ -377,7 +377,7 @@ Control:
                   
                 With .ListItems
                     If (Columna > 0) Then
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i).ListSubItems(Columna)
                                 strData = Split(.Tag, Chr$(0))
                                 .Text = strData(0)
@@ -385,7 +385,7 @@ Control:
                             End With
                         Next i
                     Else
-                        For i = 1 To .Count
+                        For i = 1 To .count
                             With .item(i)
                                 strData = Split(.Tag, Chr$(0))
                                 .Text = strData(0)
