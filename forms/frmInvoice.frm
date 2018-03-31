@@ -6,10 +6,10 @@ Begin VB.Form frmInvoice
    ClientHeight    =   8130
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   12210
+   ClientWidth     =   12540
    LinkTopic       =   "Form1"
    ScaleHeight     =   8130
-   ScaleWidth      =   12210
+   ScaleWidth      =   12540
    ShowInTaskbar   =   0   'False
    Begin VB.TextBox tValue 
       Alignment       =   1  'Right Justify
@@ -193,14 +193,19 @@ Begin VB.Form frmInvoice
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      NumItems        =   2
+      NumItems        =   3
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         Text            =   "Descripcion"
+         Text            =   "id"
          Object.Width           =   5644
       EndProperty
       BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         Alignment       =   1
          SubItemIndex    =   1
+         Text            =   "Descripcion"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         Alignment       =   1
+         SubItemIndex    =   2
          Text            =   "Valor"
          Object.Width           =   2540
       EndProperty
@@ -699,8 +704,10 @@ Dim rec As New ADODB.Recordset
 
 Dim paymentValue As Double
 Dim netValue As Double
+Dim residueValueTotal As Double
 Dim changeValue As Double
 Dim residueValue As Double
+Dim existInvoice As Boolean
 
 Private Sub cmdAdd_Click()
 If Me.tDescription = "" Then
@@ -715,8 +722,9 @@ If Me.tValue = "" Or modFormater.convertCurrencyToValue(Me.tValue) = 0 Then
     Exit Sub
 End If
 
-Set li = Me.listData.ListItems.Add(, , Me.tDescription)
-    li.SubItems(1) = modFormater.convertValueToCurrency(Me.tValue, 0)
+Set li = Me.listData.ListItems.Add(, , "0")
+    li.SubItems(1) = Me.tDescription
+    li.SubItems(2) = modFormater.convertValueToCurrency(Me.tValue, 0)
 
 Call calculateTotal
 Me.tDescription = ""
@@ -734,7 +742,7 @@ End Sub
 Private Sub cmdFinish_Click()
 If Not validateOrRegisterClient Then Exit Sub
 
-If Me.listData.ListItems.count < 1 Then
+If Me.listData.ListItems.Count < 1 Then
     MsgBox "No existen detalles de los trabajos para generar la factura", vbCritical
     Me.tDescription.SetFocus
     Exit Sub
@@ -751,7 +759,7 @@ End If
 
 'Agrega detalles a la factura
 Dim item As Integer
-For item = 1 To Me.listData.ListItems.count
+For item = 1 To Me.listData.ListItems.Count
     Dim invoiceDetail As New cInvoiceDetail
     Call invoiceDetail.load(0, invoice.id, Me.listData.ListItems(item), Me.listData.ListItems(item).SubItems(1))
     invoice.addDetail invoiceDetail
@@ -767,11 +775,6 @@ Call imprimirFactura(invoice.id)
 
 MsgBox "fin"
 
-'SQL = "INSERT INTO job " & _
-'    "(date_invoice, total_value, residue_value) VALUES " & _
-'    "(#" & modFormater.convertDateToAccesDate(Now) & "#," & modFormater.convertCurrencyToValue(Me.tTotalValue) & "," & modFormater.convertCurrencyToValue(Me.tResidueValue) & ")"
-'
-'conBd.Execute (SQL)
 End Sub
 
 Private Function saveInvoice() As cInvoice
@@ -829,6 +832,10 @@ End If
     
 End Function
 
+Private Sub cmdPrint_Click()
+Call imprimirFactura(Val(Me.tIdInvoice))
+End Sub
+
 Private Sub cmdSearchClient_Click()
 frmClient.action = ACT_SEARCH
 Set frmClient.parent = Me
@@ -840,8 +847,9 @@ Call createConexion
 
 Dim ancho As Double
 ancho = Me.listData.Width
-Me.listData.ColumnHeaders(1).Width = ancho * 0.8
-Me.listData.ColumnHeaders(2).Width = ancho * 0.19
+Me.listData.ColumnHeaders(1).Width = ancho * 0
+Me.listData.ColumnHeaders(2).Width = ancho * 0.8
+Me.listData.ColumnHeaders(3).Width = ancho * 0.2
 
 'Carga la última factura
 Dim lastInvoice As cInvoice
@@ -852,6 +860,11 @@ Else
     Me.tIdInvoice = lastInvoice.id
 End If
 Me.tIdInvoice = Format(Me.tIdInvoice, "0000")
+
+Me.Top = frmMenu.source.Top
+Me.left = frmMenu.source.left
+
+existInvoice = False
 End Sub
 
 'Se solicita una conexion a la bd
@@ -937,15 +950,15 @@ Private Function calculateTotal()
 Dim item As Integer
 
 netValue = 0
-For item = 1 To Me.listData.ListItems.count
-    netValue = netValue + modFormater.convertCurrencyToValue(listData.ListItems(item).SubItems(1))
+For item = 1 To Me.listData.ListItems.Count
+    netValue = netValue + modFormater.convertCurrencyToValue(listData.ListItems(item).SubItems(2))
 Next
 Me.tTotalValue = modFormater.convertValueToCurrency(netValue, 0)
 
 paymentValue = modFormater.convertCurrencyToValue(Me.tPaymentValue)
-changeValue = paymentValue - netValue
+changeValue = paymentValue - IIf(residueValueTotal > 0, residueValueTotal, netValue)
 changeValue = IIf(changeValue < 0, 0, changeValue)
-residueValue = netValue - paymentValue
+residueValue = IIf(residueValueTotal > 0, residueValueTotal, netValue) - paymentValue
 residueValue = IIf(residueValue < 0, 0, residueValue)
 
 Me.tChangeValue = modFormater.convertValueToCurrency(changeValue, 0)
@@ -973,4 +986,32 @@ Me.tName = client.name
 Me.tDocument = client.document
 Me.tPhone = client.phone
 Me.tDescription.SetFocus
+End Sub
+
+Public Sub loadInvoice(invoice As cInvoice)
+Me.tIdInvoice = Format(invoice.id, "0000")
+residueValueTotal = invoice.residue_value
+Me.tResidueValueTotal = modFormater.convertValueToCurrency(residueValueTotal, 0)
+
+Dim client As cClient
+Set client = invoice.getClient()
+Me.tIdClient = client.id
+Me.tDocument = client.document
+Me.tName = client.name
+Me.tPhone = client.phone
+
+Dim details() As cInvoiceDetail
+details = invoice.getDetails
+Me.listData.ListItems.Clear
+Dim item As Integer
+For item = 1 To UBound(details)
+    Set li = Me.listData.ListItems.Add(, , details(item).id)
+        li.SubItems(1) = details(item).description
+        li.SubItems(2) = details(item).detail_value
+Next
+
+Call calculateTotal
+
+Me.cmdPrint.Visible = True
+existInvoice = True
 End Sub

@@ -99,6 +99,8 @@ End Sub
 
 Private Sub Form_Load()
 logo.left = Screen.Width - logo.Width - 100
+
+Set Ap.frmMenu = Me
 End Sub
 
 Private Sub menu_MouseMove(Index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
@@ -121,8 +123,8 @@ End Select
 If formToOpen Is Nothing Then Exit Sub
 
 formToOpen.Show , Me
-formToOpen.Top = Me.source.Top
-formToOpen.left = Me.source.left
+'formToOpen.Top = Me.source.Top
+'formToOpen.left = Me.source.left
 End Sub
 
 Private Sub restoreMenu_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)

@@ -14,6 +14,44 @@ Begin VB.Form frmClientDetail
    ScaleWidth      =   12480
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
+   Begin VB.TextBox tFiltro 
+      Appearance      =   0  'Flat
+      BackColor       =   &H00C0C0C0&
+      BeginProperty Font 
+         Name            =   "Calibri"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   405
+      Index           =   5
+      Left            =   3720
+      TabIndex        =   25
+      Top             =   2595
+      Width           =   495
+   End
+   Begin VB.CheckBox optOnlyPendinfInvoices 
+      BackColor       =   &H00373436&
+      Caption         =   "Ver sólo facturas pendientes"
+      BeginProperty Font 
+         Name            =   "Calibri"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H0004D3FF&
+      Height          =   285
+      Left            =   7320
+      TabIndex        =   24
+      Top             =   2160
+      Width           =   3135
+   End
    Begin VB.CommandButton cmdAddFocus 
       Height          =   195
       Left            =   7920
@@ -199,7 +237,7 @@ Begin VB.Form frmClientDetail
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      NumItems        =   4
+      NumItems        =   5
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Text            =   "id"
          Object.Width           =   5644
@@ -221,6 +259,11 @@ Begin VB.Form frmClientDetail
          SubItemIndex    =   3
          Text            =   "Saldo restante"
          Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(5) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   4
+         Text            =   "id_client"
+         Object.Width           =   0
       EndProperty
    End
    Begin VB.Label tSumInvoiceResidue 
@@ -604,13 +647,14 @@ Call createConexion
 
 'width for the columns
 Dim widthTotal As Double
-Dim widthCols(4) As Double
+Dim widthCols(5) As Double
 
 widthTotal = Me.listData.Width
 widthCols(1) = widthTotal * 0 'id
 widthCols(2) = widthTotal * 0.33 'fecha
 widthCols(3) = widthTotal * 0.33 'valor total
 widthCols(4) = widthTotal * 0.34 'saldo restante
+widthCols(5) = widthTotal * 0 'cliente
 
 modComponents.setWidthForColumnsAndFilters tFiltro, listData, widthCols
 
@@ -636,28 +680,26 @@ Set conBd = modConexion.getNewConection
 rec.CursorLocation = adUseClient
 End Function
 
-Private Sub Label2_Click()
-
-End Sub
-
 Private Sub Form_Unload(Cancel As Integer)
 Me.parent.refreshData
 End Sub
 
 Private Sub listData_DblClick()
 If Me.listData.SelectedItem.Index > 0 Then
-    If (Me.action = Ap.ACT_SEARCH) Then
-        Call Me.parent.loadClient(getClientSelected())
-        Unload Me
-    End If
+    frmInvoice.Show , Ap.frmMenu
+    frmInvoice.loadInvoice getInvoiceSelected()
 End If
 End Sub
 
-Private Function getClientSelected() As cClient
-Dim client As New cClient
-client.loadClient Me.listData.SelectedItem, Me.listData.SelectedItem.SubItems(1), Me.listData.SelectedItem.SubItems(2), Me.listData.SelectedItem.SubItems(3)
-Set getClientSelected = client
+Private Function getInvoiceSelected() As cInvoice
+Dim invoice As New cInvoice
+invoice.loadInvoice Me.listData.SelectedItem, Me.listData.SelectedItem.SubItems(4), Me.listData.SelectedItem.SubItems(1), Me.listData.SelectedItem.SubItems(2), Me.listData.SelectedItem.SubItems(3)
+Set getInvoiceSelected = invoice
 End Function
+
+Private Sub optOnlyPendinfInvoices_Click()
+Call queryWithParameters
+End Sub
 
 Private Sub tDocument_KeyPress(KeyAscii As Integer)
 Call executeRegister(KeyAscii)
@@ -696,6 +738,7 @@ Do Until rec.EOF
         li.SubItems(1) = rec("date_invoice")
         li.SubItems(2) = modFormater.convertValueToCurrency(rec("total_value"), 0)
         li.SubItems(3) = modFormater.convertValueToCurrency(rec("residue_value"), 0)
+        li.SubItems(4) = rec("id_client")
     rec.MoveNext
 Loop
 Me.tNoInvoices = rec.RecordCount & " facturas registradas."
@@ -730,6 +773,11 @@ For countFilters = 2 To Me.tFiltro.count - 1
         End Select
     End If
 Next
+
+If (Me.optOnlyPendinfInvoices.value = 1) Then
+    addParameter "residue_value >0"
+End If
+
 Call loadList(SQL)
 loadSumInvoice
 filtersApplied = 0

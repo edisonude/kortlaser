@@ -534,7 +534,7 @@ If Me.listData.SelectedItem.Index > 0 Then
         Call Me.parent.loadClient(getClientSelected())
         Unload Me
     Else
-        frmClientDetail.Show , Me
+        frmClientDetail.Show , Ap.frmMenu
         Set frmClientDetail.parent = Me
         frmClientDetail.loadClient getClientSelected()
     End If

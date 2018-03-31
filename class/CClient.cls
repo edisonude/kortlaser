@@ -49,3 +49,24 @@ End If
 Set findByDocument = client
 rec.Close
 End Function
+
+'Encuentra un cliente por su documento
+Public Function findById(id As Integer) As cClient
+Dim conBd As ADODB.Connection
+Dim rec As New ADODB.Recordset
+
+'Se solicita una conexion a la bd
+Set conBd = modConexion.getNewConection
+rec.CursorLocation = adUseClient
+
+rec.Open "select * from client where id=" & id & "", conBd, adOpenStatic, adLockOptimistic
+
+Dim client As cClient
+If (rec.RecordCount >= 1) Then
+    Set client = New cClient
+    Call client.loadClient(rec("id"), rec("document"), rec("name"), rec("phone"))
+End If
+
+Set findById = client
+rec.Close
+End Function

@@ -73,3 +73,38 @@ SQL = "INSERT INTO invoice_payment " & _
 conBd.Execute (SQL)
 End Sub
 
+Public Function getClient() As cClient
+Dim client As New cClient
+Set client = client.findById(Me.id_client)
+Set getClient = client
+End Function
+
+Public Function getDetails()
+Dim conBd As ADODB.Connection
+Dim rec As New ADODB.Recordset
+
+'Se solicita una conexion a la bd
+Set conBd = modConexion.getNewConection
+rec.CursorLocation = adUseClient
+
+Dim details() As New cInvoiceDetail
+
+SQL = "Select * from invoice_detail where id_invoice=" & Me.id & ""
+rec.Open SQL, conBd, adOpenStatic, adLockOptimistic
+
+Dim item As Integer
+If rec.RecordCount > 0 Then
+    ReDim details(rec.RecordCount) As New cInvoiceDetail
+    
+    For item = 1 To rec.RecordCount
+        Dim detail As cInvoiceDetail
+        Set detail = New cInvoiceDetail
+        detail.load rec("id"), rec("id_invoice"), rec("description"), rec("detail_value")
+        Set details(item) = detail
+        rec.MoveNext
+    Next
+End If
+
+getDetails = details
+End Function
+

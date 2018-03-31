@@ -7,5 +7,8 @@ Public cClient As New cClient
 'Instancia de factura utilitaria
 Public cInvoice As New cInvoice
 
+'Instancia del menú
+Public frmMenu As frmMenu
+
 'Acción de busqueda
 Public Const ACT_SEARCH = 1
