@@ -14,25 +14,6 @@ Begin VB.Form frmClientDetail
    ScaleWidth      =   12480
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin VB.TextBox tFiltro 
-      Appearance      =   0  'Flat
-      BackColor       =   &H00C0C0C0&
-      BeginProperty Font 
-         Name            =   "Calibri"
-         Size            =   12
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   405
-      Index           =   5
-      Left            =   3720
-      TabIndex        =   25
-      Top             =   2595
-      Width           =   495
-   End
    Begin VB.CheckBox optOnlyPendinfInvoices 
       BackColor       =   &H00373436&
       Caption         =   "Ver sólo facturas pendientes"
@@ -239,13 +220,13 @@ Begin VB.Form frmClientDetail
       EndProperty
       NumItems        =   5
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         Text            =   "id"
+         Text            =   "Fecha"
          Object.Width           =   5644
       EndProperty
       BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Alignment       =   1
          SubItemIndex    =   1
-         Text            =   "Fecha"
+         Text            =   "No. Factura"
          Object.Width           =   2540
       EndProperty
       BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
@@ -499,7 +480,7 @@ Begin VB.Form frmClientDetail
       BackStyle       =   0  'Transparent
       Caption         =   "Cliente"
       BeginProperty Font 
-         Name            =   "Adobe Gothic Std B"
+         Name            =   "Arial"
          Size            =   18
          Charset         =   0
          Weight          =   700
@@ -650,17 +631,16 @@ Dim widthTotal As Double
 Dim widthCols(5) As Double
 
 widthTotal = Me.listData.Width
-widthCols(1) = widthTotal * 0 'id
-widthCols(2) = widthTotal * 0.33 'fecha
-widthCols(3) = widthTotal * 0.33 'valor total
-widthCols(4) = widthTotal * 0.34 'saldo restante
+widthCols(1) = widthTotal * 0.35 'id
+widthCols(2) = widthTotal * 0.15 'fecha
+widthCols(3) = widthTotal * 0.25 'valor total
+widthCols(4) = widthTotal * 0.25 'saldo restante
 widthCols(5) = widthTotal * 0 'cliente
 
 modComponents.setWidthForColumnsAndFilters tFiltro, listData, widthCols
 
 Me.tFiltro(0).Visible = False
 Me.tFiltro(1).Visible = False
-Me.tFiltro(2).Visible = False
 
 Me.tSumInvoiceValue.Width = Me.tFiltro(3).Width
 Me.tSumInvoiceValue.left = Me.tFiltro(3).left - 100
@@ -693,7 +673,7 @@ End Sub
 
 Private Function getInvoiceSelected() As cInvoice
 Dim invoice As New cInvoice
-invoice.loadInvoice Me.listData.SelectedItem, Me.listData.SelectedItem.SubItems(4), Me.listData.SelectedItem.SubItems(1), Me.listData.SelectedItem.SubItems(2), Me.listData.SelectedItem.SubItems(3)
+invoice.loadInvoice Me.listData.SelectedItem.SubItems(1), Me.listData.SelectedItem.SubItems(4), Me.listData.SelectedItem, Me.listData.SelectedItem.SubItems(2), Me.listData.SelectedItem.SubItems(3)
 Set getInvoiceSelected = invoice
 End Function
 
@@ -734,8 +714,8 @@ SQL = SQL & " order by date_invoice DESC"
 rec.Open SQL, conBd, adOpenStatic, adLockOptimistic
 Me.listData.ListItems.Clear
 Do Until rec.EOF
-    Set li = Me.listData.ListItems.Add(, , rec("id"))
-        li.SubItems(1) = rec("date_invoice")
+    Set li = Me.listData.ListItems.Add(, , modFormater.convertDateTime(rec("date_invoice")))
+        li.SubItems(1) = rec("id")
         li.SubItems(2) = modFormater.convertValueToCurrency(rec("total_value"), 0)
         li.SubItems(3) = modFormater.convertValueToCurrency(rec("residue_value"), 0)
         li.SubItems(4) = rec("id_client")
@@ -763,9 +743,11 @@ filtersApplied = 1
 'Verifica y agrega los criterios de los filtros
 On Error GoTo control
 Dim countFilters As Integer
-For countFilters = 2 To Me.tFiltro.count - 1
+For countFilters = 2 To Me.tFiltro.Count - 1
     If Me.tFiltro(countFilters).Text <> "" Then
         Select Case countFilters
+            Case 2
+                addParameter "id like '%" & tFiltro(countFilters) & "%'"
             Case 3
                 addParameter "total_value like '%" & tFiltro(countFilters) & "%'"
             Case 4
@@ -821,12 +803,12 @@ Public Sub loadTotalsInvoice()
 Dim item As Integer
 Dim invoicesPending As Integer
 invoicesPending = 0
-For item = 1 To Me.listData.ListItems.count
+For item = 1 To Me.listData.ListItems.Count
     If modFormater.convertCurrencyToValue(listData.ListItems(item).SubItems(3)) > 0 Then
         invoicesPending = invoicesPending + 1
     End If
 Next
-Me.tTotalInvoice = Me.listData.ListItems.count
+Me.tTotalInvoice = Me.listData.ListItems.Count
 Me.tTotalInvoicePending = invoicesPending
 End Sub
 
@@ -836,7 +818,7 @@ Dim sumInvoiceTotal As Double
 Dim sumInvoiceResidue As Double
 sumInvoiceTotal = 0
 sumInvoiceResidue = 0
-For item = 1 To Me.listData.ListItems.count
+For item = 1 To Me.listData.ListItems.Count
     sumInvoiceTotal = sumInvoiceTotal + modFormater.convertCurrencyToValue(listData.ListItems(item).SubItems(2))
     sumInvoiceResidue = sumInvoiceResidue + modFormater.convertCurrencyToValue(listData.ListItems(item).SubItems(3))
 Next

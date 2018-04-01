@@ -228,7 +228,7 @@ Begin VB.Form frmInvoice
       BackStyle       =   0  'Transparent
       Caption         =   "001"
       BeginProperty Font 
-         Name            =   "Adobe Gothic Std B"
+         Name            =   "Arial"
          Size            =   18
          Charset         =   0
          Weight          =   700
@@ -247,7 +247,7 @@ Begin VB.Form frmInvoice
       BackStyle       =   0  'Transparent
       Caption         =   "No."
       BeginProperty Font 
-         Name            =   "Adobe Gothic Std B"
+         Name            =   "Arial"
          Size            =   18
          Charset         =   0
          Weight          =   700
@@ -662,7 +662,7 @@ Begin VB.Form frmInvoice
       BackStyle       =   0  'Transparent
       Caption         =   "Facturas"
       BeginProperty Font 
-         Name            =   "Adobe Gothic Std B"
+         Name            =   "Arial"
          Size            =   18
          Charset         =   0
          Weight          =   700
@@ -757,15 +757,18 @@ If invoice Is Nothing Then
     Exit Sub
 End If
 
+'Borra todos los detalles de la factura
+invoice.removeDetails
+
 'Agrega detalles a la factura
 Dim item As Integer
 For item = 1 To Me.listData.ListItems.Count
     Dim invoiceDetail As New cInvoiceDetail
-    Call invoiceDetail.load(0, invoice.id, Me.listData.ListItems(item), Me.listData.ListItems(item).SubItems(1))
+    Call invoiceDetail.load(0, invoice.id, Me.listData.ListItems(item).SubItems(1), Me.listData.ListItems(item).SubItems(2))
     invoice.addDetail invoiceDetail
 Next
 
-If Val(Me.tPaymentValue) > 0 Then
+If modFormater.convertCurrencyToValue(Me.tPaymentValue) > 0 Then
     Dim invoicePayment As New cInvoicePayment
     Call invoicePayment.load(0, invoice.id, Now(), paymentValue, changeValue, residueValue)
     invoice.addPayment invoicePayment
@@ -778,12 +781,27 @@ MsgBox "fin"
 End Sub
 
 Private Function saveInvoice() As cInvoice
-SQL = "INSERT INTO invoice " & _
+If existInvoice Then
+    SQL = "UPDATE invoice SET id_client = " & Me.tIdClient & _
+    ", total_value=" & modFormater.convertCurrencyToValue(Me.tTotalValue) & _
+    ", residue_value=" & modFormater.convertCurrencyToValue(Me.tResidueValue) & _
+    " WHERE id=" & Val(Me.tIdInvoice) & ""
+    
+    conBd.Execute (SQL)
+    
+    Dim invoice As cInvoice
+    Set invoice = New cInvoice
+    invoice.loadInvoice Val(Me.tIdInvoice), Me.tIdClient, Now, modFormater.convertCurrencyToValue(Me.tTotalValue), modFormater.convertCurrencyToValue(Me.tResidueValue)
+    Set saveInvoice = invoice
+Else
+    SQL = "INSERT INTO invoice " & _
     "(id_client,date_invoice, total_value, residue_value) VALUES " & _
     "('" & Me.tIdClient & "',#" & modFormater.convertDateToAccesDate(Now) & "#," & modFormater.convertCurrencyToValue(Me.tTotalValue) & "," & modFormater.convertCurrencyToValue(Me.tResidueValue) & ")"
-conBd.Execute (SQL)
-Sleep 800
-Set saveInvoice = Ap.cInvoice.findLastInvoice
+    
+    conBd.Execute (SQL)
+    Sleep 800
+    Set saveInvoice = Ap.cInvoice.findLastInvoice
+End If
 End Function
 
 Private Function validateOrRegisterClient()

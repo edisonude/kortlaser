@@ -108,3 +108,23 @@ End If
 getDetails = details
 End Function
 
+Public Sub removeDetails()
+Dim details() As cInvoiceDetail
+details = getDetails
+
+Dim item As Integer
+For item = 1 To UBound(details)
+    Me.removeDetail details(item).id
+Next
+End Sub
+
+Public Sub removeDetail(id_detail As Integer)
+Dim conBd As ADODB.Connection
+Dim rec As New ADODB.Recordset
+
+'Se solicita una conexion a la bd
+Set conBd = modConexion.getNewConection
+
+SQL = "DELETE FROM invoice_detail WHERE id=" & id_detail & ""
+conBd.Execute (SQL)
+End Sub
