@@ -12,6 +12,37 @@ Begin VB.Form frmClient
    ScaleWidth      =   12300
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
+   Begin VB.PictureBox picOnlySearch 
+      BackColor       =   &H00373436&
+      BorderStyle     =   0  'None
+      Height          =   975
+      Left            =   360
+      ScaleHeight     =   975
+      ScaleWidth      =   10215
+      TabIndex        =   17
+      Top             =   720
+      Visible         =   0   'False
+      Width           =   10215
+      Begin VB.Label Label2 
+         BackStyle       =   0  'Transparent
+         Caption         =   "Seleccione el cliente para el cual desea realizar la factura"
+         BeginProperty Font 
+            Name            =   "Calibri"
+            Size            =   15.75
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   -1  'True
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00C0C0C0&
+         Height          =   495
+         Left            =   120
+         TabIndex        =   18
+         Top             =   240
+         Width           =   9135
+      End
+   End
    Begin VB.TextBox tFiltro 
       Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
@@ -219,14 +250,12 @@ Begin VB.Form frmClient
       Top             =   1320
       Width           =   255
    End
-   Begin VB.Label tIdClient 
-      BackColor       =   &H000000FF&
-      Height          =   255
-      Left            =   0
-      TabIndex        =   17
-      Top             =   720
-      Visible         =   0   'False
-      Width           =   255
+   Begin VB.Image cmdAdd 
+      Height          =   405
+      Left            =   8520
+      Picture         =   "frmClient.frx":0000
+      Top             =   1080
+      Width           =   2025
    End
    Begin VB.Label cmdCleanFilters 
       Alignment       =   1  'Right Justify
@@ -267,13 +296,6 @@ Begin VB.Form frmClient
       TabIndex        =   14
       Top             =   7440
       Width           =   2895
-   End
-   Begin VB.Image cmdAdd 
-      Height          =   405
-      Left            =   8520
-      Picture         =   "frmClient.frx":0000
-      Top             =   1080
-      Width           =   2025
    End
    Begin VB.Line Line1 
       BorderColor     =   &H003933ED&
@@ -459,10 +481,6 @@ If client Is Nothing Then
     SQL = "INSERT INTO client " & _
     "(document, name, phone) VALUES " & _
     "('" & Me.tDocument & "','" & Me.tName & "','" & Me.tPhone & "')"
-Else
-    'Si existe se actualizan los datos
-    SQL = "UPDATE client SET document='" & Me.tDocument & "'," & _
-    "name='" & Me.tName & "',phone='" & Me.tPhone & "' WHERE id=" & Me.tIdClient & ""
 End If
 
 conBd.Execute (SQL)
@@ -470,7 +488,6 @@ Sleep 800
 
 MsgBox "El cliente fue creado o actualizado con éxito", vbInformation
     
-Me.tIdClient = ""
 Me.tDocument = ""
 Me.tName = ""
 Me.tPhone = ""
@@ -517,9 +534,12 @@ filtersApplied = 0
 
 'Iniciar
 Me.reloadForm
-
 Me.Top = frmMenu.source.Top
 Me.left = frmMenu.source.left
+
+If (Me.action = Ap.ACT_SEARCH) Then
+    Me.picOnlySearch.Visible = True
+End If
 End Sub
 
 'Se solicita una conexion a la bd
@@ -527,6 +547,12 @@ Private Function createConexion()
 Set conBd = modConexion.getNewConection
 rec.CursorLocation = adUseClient
 End Function
+
+Private Sub Form_Unload(Cancel As Integer)
+If (Me.action = Ap.ACT_SEARCH) Then
+    Me.action = 0
+End If
+End Sub
 
 Private Sub listData_DblClick()
 If Me.listData.SelectedItem.Index > 0 Then
@@ -562,15 +588,10 @@ Private Sub tDocument_LostFocus()
 Dim client As cClient
 Set client = Ap.cClient.findByDocument(Me.tDocument)
 
-If client Is Nothing Then
-    Me.tIdClient = ""
-    Me.tName = ""
-    Me.tPhone = ""
-Else
-    Me.tIdClient = client.id
-    Me.tDocument = client.document
-    Me.tName = client.name
-    Me.tPhone = client.phone
+If Not client Is Nothing Then
+    MsgBox "Ya existe otro cliente registrado con este mismo documento", vbCritical
+    Me.tDocument = ""
+    Me.tDocument.SetFocus
 End If
 End Sub
 
@@ -607,7 +628,7 @@ SQL = "Select * from client"
 'Verifica y agrega los criterios de los filtros
 On Error GoTo control
 Dim countFilters As Integer
-For countFilters = 2 To Me.tFiltro.count - 1
+For countFilters = 2 To Me.tFiltro.Count - 1
     If Me.tFiltro(countFilters).Text <> "" Then
         Select Case countFilters
             Case 2

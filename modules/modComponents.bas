@@ -39,14 +39,6 @@ Public cleaningFilters As Boolean
         End If
     End Sub
     
-    'Open a form as a window, with a name for the title
-    Public Sub openFormAsWindow(Form As Form, title As String)
-        Form.BorderStyle = 1
-        Form.Caption = title
-        AplicarSkin Form, ""
-        Form.Show
-    End Sub
-    
     Public Function SoloNumeros(ByVal KeyAscii As Integer) As Integer
     'Permite que solo sean ingresados los numeros, el ENTER y el RETROCESO
         If InStr("0123456789.,", Chr(KeyAscii)) = 0 Then
@@ -201,7 +193,7 @@ control:
     'except: filter to except and not clean, if has -1 clean all the filters
     Public Sub cleanFilters(filters, except As Integer)
         modComponents.cleaningFilters = True
-        For i = 1 To filters.count - 1
+        For i = 1 To filters.Count - 1
             If i <> except Then
                 filters(i).Text = ""
             End If
@@ -234,179 +226,179 @@ control:
     
     'Ordenar por columnas
     Public Sub orderByColumn(list As ListView, ByVal ColumnHeader As MSComctlLib.ColumnHeader, window As Form)
-    On Error Resume Next
-          
-          
-        With list
-          
-            Dim i As Long
-            Dim Formato As String
-            Dim strData() As String
-              
-            Dim Columna As Long
-              
-            Call SendMessage(window.hWnd, WM_SETREDRAW, 0&, 0&)
-              
-              
-            Columna = ColumnHeader.Index - 1
-              
-            '''''''''''''''''''''''''''''''''''''''''''''
-            ' Tipo de dato a ordenar
-            ''''''''''''''''''''''''''''''''''''''''''''''
-              
-            Select Case UCase$(ColumnHeader.Tag)
-          
-              
-            ' Fecha
-            '''''''''''''''''''''''''''''''''''''''''''''
-            Case "DATE"
-              
-                Formato = "YYYYMMDDHhNnSs"
-              
-                ' Ordena alfabéticamente la columna con Fechas _
-                  ( es la columna que tiene en el tag el valor DATE )
-              
-                With .ListItems
-                    If (Columna > 0) Then
-                        For i = 1 To .count
-                            With .item(i).ListSubItems(Columna)
-                                .Tag = .Text & Chr$(0) & .Tag
-                                If IsDate(.Text) Then
-                                    .Text = Format(CDate(.Text), _
-                                                        Formato)
-                                Else
-                                    .Text = ""
-                                End If
-                            End With
-                        Next i
-                    Else
-                        For i = 1 To .count
-                            With .item(i)
-                                .Tag = .Text & Chr$(0) & .Tag
-                                If IsDate(.Text) Then
-                                    .Text = Format(CDate(.Text), _
-                                                        Formato)
-                                Else
-                                    .Text = ""
-                                End If
-                            End With
-                        Next i
-                    End If
-                End With
-                  
-                ' Ordena alfabéticamente
-                  
-                .SortOrder = (.SortOrder + 1) Mod 2
-                .SortKey = ColumnHeader.Index - 1
-                .Sorted = True
-                  
-                With .ListItems
-                    If (Columna > 0) Then
-                        For i = 1 To .count
-                            With .item(i).ListSubItems(Columna)
-                                strData = Split(.Tag, Chr$(0))
-                                .Text = strData(0)
-                                .Tag = strData(1)
-                            End With
-                        Next i
-                    Else
-                        For i = 1 To .count
-                            With .item(i)
-                                strData = Split(.Tag, Chr$(0))
-                                .Text = strData(0)
-                                .Tag = strData(1)
-                            End With
-                        Next i
-                    End If
-                End With
-                  
-            ' Datos de numéricos
-            '''''''''''''''''''''''''''''''''''''''''''''
-            Case "NUMBER"
-              
-                ' Ordena alfabéticamente la columna con números _
-                  ( es la columna que tiene en el tag el valor NUMBER )
-              
-                Formato = String(30, "0") & "." & String(30, "0")
-                      
-                With .ListItems
-                    If (Columna > 0) Then
-                        For i = 1 To .count
-                            With .item(i).ListSubItems(Columna)
-                                .Tag = .Text & Chr$(0) & .Tag
-                                If IsNumeric(.Text) Then
-                                    If CDbl(.Text) >= 0 Then
-                                        .Text = Format(CDbl(.Text), _
-                                            Formato)
-                                    Else
-                                        .Text = "&" & InvNumber( _
-                                            Format(0 - CDbl(.Text), _
-                                            Formato))
-                                    End If
-                                Else
-                                    .Text = ""
-                                End If
-                            End With
-                        Next i
-                    Else
-                        For i = 1 To .count
-                            With .item(i)
-                                .Tag = .Text & Chr$(0) & .Tag
-                                If IsNumeric(.Text) Then
-                                    If CDbl(.Text) >= 0 Then
-                                        .Text = Format(CDbl(.Text), _
-                                            Formato)
-                                    Else
-                                        .Text = "&" & InvNumber( _
-                                            Format(0 - CDbl(.Text), _
-                                            Formato))
-                                    End If
-                                Else
-                                    .Text = ""
-                                End If
-                            End With
-                        Next i
-                    End If
-                End With
-                  
-                ' Ordena alfabéticamente
-                  
-                .SortOrder = (.SortOrder + 1) Mod 2
-                .SortKey = ColumnHeader.Index - 1
-                .Sorted = True
-                  
-                With .ListItems
-                    If (Columna > 0) Then
-                        For i = 1 To .count
-                            With .item(i).ListSubItems(Columna)
-                                strData = Split(.Tag, Chr$(0))
-                                .Text = strData(0)
-                                .Tag = strData(1)
-                            End With
-                        Next i
-                    Else
-                        For i = 1 To .count
-                            With .item(i)
-                                strData = Split(.Tag, Chr$(0))
-                                .Text = strData(0)
-                                .Tag = strData(1)
-                            End With
-                        Next i
-                    End If
-                End With
-              
-            Case Else
-                          
-                .SortOrder = (.SortOrder + 1) Mod 2
-                .SortKey = ColumnHeader.Index - 1
-                .Sorted = True
-                  
-            End Select
-          
-        End With
-          
-        Call SendMessage(window.hWnd, WM_SETREDRAW, 1&, 0&)
-        list.Refresh
+'    On Error Resume Next
+'
+'
+'        With list
+'
+'            Dim i As Long
+'            Dim Formato As String
+'            Dim strData() As String
+'
+'            Dim Columna As Long
+'
+'            Call SendMessage(window.hWnd, WM_SETREDRAW, 0&, 0&)
+'
+'
+'            Columna = ColumnHeader.Index - 1
+'
+'            '''''''''''''''''''''''''''''''''''''''''''''
+'            ' Tipo de dato a ordenar
+'            ''''''''''''''''''''''''''''''''''''''''''''''
+'
+'            Select Case UCase$(ColumnHeader.Tag)
+'
+'
+'            ' Fecha
+'            '''''''''''''''''''''''''''''''''''''''''''''
+'            Case "DATE"
+'
+'                Formato = "YYYYMMDDHhNnSs"
+'
+'                ' Ordena alfabéticamente la columna con Fechas _
+'                  ( es la columna que tiene en el tag el valor DATE )
+'
+'                With .ListItems
+'                    If (Columna > 0) Then
+'                        For i = 1 To .Count
+'                            With .item(i).ListSubItems(Columna)
+'                                .Tag = .Text & Chr$(0) & .Tag
+'                                If IsDate(.Text) Then
+'                                    .Text = Format(CDate(.Text), _
+'                                                        Formato)
+'                                Else
+'                                    .Text = ""
+'                                End If
+'                            End With
+'                        Next i
+'                    Else
+'                        For i = 1 To .Count
+'                            With .item(i)
+'                                .Tag = .Text & Chr$(0) & .Tag
+'                                If IsDate(.Text) Then
+'                                    .Text = Format(CDate(.Text), _
+'                                                        Formato)
+'                                Else
+'                                    .Text = ""
+'                                End If
+'                            End With
+'                        Next i
+'                    End If
+'                End With
+'
+'                ' Ordena alfabéticamente
+'
+'                .SortOrder = (.SortOrder + 1) Mod 2
+'                .SortKey = ColumnHeader.Index - 1
+'                .Sorted = True
+'
+'                With .ListItems
+'                    If (Columna > 0) Then
+'                        For i = 1 To .Count
+'                            With .item(i).ListSubItems(Columna)
+'                                strData = Split(.Tag, Chr$(0))
+'                                .Text = strData(0)
+'                                .Tag = strData(1)
+'                            End With
+'                        Next i
+'                    Else
+'                        For i = 1 To .Count
+'                            With .item(i)
+'                                strData = Split(.Tag, Chr$(0))
+'                                .Text = strData(0)
+'                                .Tag = strData(1)
+'                            End With
+'                        Next i
+'                    End If
+'                End With
+'
+'            ' Datos de numéricos
+'            '''''''''''''''''''''''''''''''''''''''''''''
+'            Case "NUMBER"
+'
+'                ' Ordena alfabéticamente la columna con números _
+'                  ( es la columna que tiene en el tag el valor NUMBER )
+'
+'                Formato = String(30, "0") & "." & String(30, "0")
+'
+'                With .ListItems
+'                    If (Columna > 0) Then
+'                        For i = 1 To .Count
+'                            With .item(i).ListSubItems(Columna)
+'                                .Tag = .Text & Chr$(0) & .Tag
+'                                If IsNumeric(.Text) Then
+'                                    If CDbl(.Text) >= 0 Then
+'                                        .Text = Format(CDbl(.Text), _
+'                                            Formato)
+'                                    Else
+'                                        .Text = "&" & InvNumber( _
+'                                            Format(0 - CDbl(.Text), _
+'                                            Formato))
+'                                    End If
+'                                Else
+'                                    .Text = ""
+'                                End If
+'                            End With
+'                        Next i
+'                    Else
+'                        For i = 1 To .Count
+'                            With .item(i)
+'                                .Tag = .Text & Chr$(0) & .Tag
+'                                If IsNumeric(.Text) Then
+'                                    If CDbl(.Text) >= 0 Then
+'                                        .Text = Format(CDbl(.Text), _
+'                                            Formato)
+'                                    Else
+'                                        .Text = "&" & InvNumber( _
+'                                            Format(0 - CDbl(.Text), _
+'                                            Formato))
+'                                    End If
+'                                Else
+'                                    .Text = ""
+'                                End If
+'                            End With
+'                        Next i
+'                    End If
+'                End With
+'
+'                ' Ordena alfabéticamente
+'
+'                .SortOrder = (.SortOrder + 1) Mod 2
+'                .SortKey = ColumnHeader.Index - 1
+'                .Sorted = True
+'
+'                With .ListItems
+'                    If (Columna > 0) Then
+'                        For i = 1 To .Count
+'                            With .item(i).ListSubItems(Columna)
+'                                strData = Split(.Tag, Chr$(0))
+'                                .Text = strData(0)
+'                                .Tag = strData(1)
+'                            End With
+'                        Next i
+'                    Else
+'                        For i = 1 To .Count
+'                            With .item(i)
+'                                strData = Split(.Tag, Chr$(0))
+'                                .Text = strData(0)
+'                                .Tag = strData(1)
+'                            End With
+'                        Next i
+'                    End If
+'                End With
+'
+'            Case Else
+'
+'                .SortOrder = (.SortOrder + 1) Mod 2
+'                .SortKey = ColumnHeader.Index - 1
+'                .Sorted = True
+'
+'            End Select
+'
+'        End With
+'
+'        Call SendMessage(window.hWnd, WM_SETREDRAW, 1&, 0&)
+'        list.Refresh
     End Sub
     
     Public Function InvNumber(ByVal Number As String) As String

@@ -14,6 +14,24 @@ Begin VB.Form frmClientDetail
    ScaleWidth      =   12480
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
+   Begin VB.TextBox tPhone 
+      Appearance      =   0  'Flat
+      BackColor       =   &H00C0C0C0&
+      BeginProperty Font 
+         Name            =   "Calibri"
+         Size            =   14.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   465
+      Left            =   6360
+      TabIndex        =   7
+      Top             =   1080
+      Width           =   1815
+   End
    Begin VB.CheckBox optOnlyPendinfInvoices 
       BackColor       =   &H00373436&
       Caption         =   "Ver sólo facturas pendientes"
@@ -39,24 +57,6 @@ Begin VB.Form frmClientDetail
       TabIndex        =   9
       Top             =   1320
       Width           =   255
-   End
-   Begin VB.TextBox tPhone 
-      Appearance      =   0  'Flat
-      BackColor       =   &H00C0C0C0&
-      BeginProperty Font 
-         Name            =   "Calibri"
-         Size            =   14.25
-         Charset         =   0
-         Weight          =   700
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   465
-      Left            =   6360
-      TabIndex        =   7
-      Top             =   1080
-      Width           =   1815
    End
    Begin VB.TextBox tDocument 
       Appearance      =   0  'Flat
@@ -574,10 +574,17 @@ Dim rec As New ADODB.Recordset
 Dim baseSQL As String
 Dim filtersApplied As Integer
 
+Dim orgDocument As Integer
+
 Public action As Integer
 Public parent As Form
 
 Private Sub cmdAdd_Click()
+If Screen.ActiveControl.name = "tDocument" Then
+    Call tDocument_LostFocus
+    Exit Sub
+End If
+
 'Valida la información del cliente
 If (Me.tDocument = "") Then
     MsgBox "Debe ingresar el documento del cliente", vbCritical
@@ -652,6 +659,7 @@ filtersApplied = 0
 
 Me.Top = frmMenu.source.Top
 Me.left = frmMenu.source.left
+
 End Sub
 
 'Se solicita una conexion a la bd
@@ -667,6 +675,7 @@ End Sub
 Private Sub listData_DblClick()
 If Me.listData.SelectedItem.Index > 0 Then
     frmInvoice.Show , Ap.frmMenu
+    Set frmInvoice.parent = Me
     frmInvoice.loadInvoice getInvoiceSelected()
 End If
 End Sub
@@ -696,15 +705,12 @@ Private Sub tDocument_LostFocus()
 Dim client As cClient
 Set client = Ap.cClient.findByDocument(Me.tDocument)
 
-If client Is Nothing Then
-    Me.tIdClient = ""
-    Me.tName = ""
-    Me.tPhone = ""
-Else
-    Me.tIdClient = client.id
-    Me.tDocument = client.document
-    Me.tName = client.name
-    Me.tPhone = client.phone
+If Not client Is Nothing And client.document <> Me.tDocument Then
+    If MsgBox("Este documento pertenece a otro cliente. ¿Desea cambiarlo?", vbQuestion + vbYesNo) = vbYes Then
+        Me.loadClient client
+    Else
+        Me.tDocument = orgDocument
+    End If
 End If
 End Sub
 
@@ -789,6 +795,7 @@ Call executeRegister(KeyAscii)
 End Sub
 
 Public Sub loadClient(client As cClient)
+orgDocument = client.id
 Me.tIdClient = client.id
 Me.tName = client.name
 Me.tDocument = client.document
@@ -826,3 +833,6 @@ Me.tSumInvoiceResidue = modFormater.convertValueToCurrency(sumInvoiceResidue, 0)
 Me.tSumInvoiceValue = modFormater.convertValueToCurrency(sumInvoiceTotal, 0)
 End Sub
 
+Public Function refreshList()
+Call queryWithParameters
+End Function

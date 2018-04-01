@@ -26,6 +26,7 @@ Begin VB.Form frmInvoice
       EndProperty
       Height          =   465
       Left            =   7320
+      MaxLength       =   9
       TabIndex        =   4
       Top             =   2160
       Width           =   1815
@@ -124,6 +125,7 @@ Begin VB.Form frmInvoice
       EndProperty
       Height          =   945
       Left            =   7320
+      MultiLine       =   -1  'True
       TabIndex        =   3
       Top             =   1080
       Width           =   4695
@@ -217,6 +219,26 @@ Begin VB.Form frmInvoice
       Top             =   2280
       Width           =   255
    End
+   Begin VB.Label tDateInvoice 
+      Alignment       =   1  'Right Justify
+      BackColor       =   &H00373436&
+      Caption         =   "fecha factura"
+      BeginProperty Font 
+         Name            =   "Calibri"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   -1  'True
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00C0C0C0&
+      Height          =   375
+      Left            =   8760
+      TabIndex        =   29
+      Top             =   600
+      Width           =   3135
+   End
    Begin VB.Image cmdExit 
       Height          =   405
       Left            =   7800
@@ -225,8 +247,9 @@ Begin VB.Form frmInvoice
       Width           =   2025
    End
    Begin VB.Label tIdInvoice 
-      BackStyle       =   0  'Transparent
-      Caption         =   "001"
+      Alignment       =   1  'Right Justify
+      BackColor       =   &H00373436&
+      Caption         =   "0001"
       BeginProperty Font 
          Name            =   "Arial"
          Size            =   18
@@ -241,7 +264,7 @@ Begin VB.Form frmInvoice
       Left            =   11160
       TabIndex        =   28
       Top             =   120
-      Width           =   900
+      Width           =   780
    End
    Begin VB.Label Label2 
       BackStyle       =   0  'Transparent
@@ -310,6 +333,7 @@ Begin VB.Form frmInvoice
       Left            =   3360
       TabIndex        =   24
       Top             =   840
+      Visible         =   0   'False
       Width           =   255
    End
    Begin VB.Label label 
@@ -410,7 +434,7 @@ Begin VB.Form frmInvoice
       Alignment       =   2  'Center
       BackColor       =   &H00404040&
       BackStyle       =   0  'Transparent
-      Caption         =   "Valor pagado"
+      Caption         =   "Valor a pagar"
       BeginProperty Font 
          Name            =   "Calibri"
          Size            =   15.75
@@ -704,10 +728,13 @@ Dim rec As New ADODB.Recordset
 
 Dim paymentValue As Double
 Dim netValue As Double
+Dim netValueOrg As Double
 Dim residueValueTotal As Double
 Dim changeValue As Double
 Dim residueValue As Double
 Dim existInvoice As Boolean
+
+Public parent As Form
 
 Private Sub cmdAdd_Click()
 If Me.tDescription = "" Then
@@ -729,6 +756,7 @@ Set li = Me.listData.ListItems.Add(, , "0")
 Call calculateTotal
 Me.tDescription = ""
 Me.tValue = ""
+Me.tDescription.SetFocus
 End Sub
 
 Private Sub cmdAddFocus_Click()
@@ -774,10 +802,10 @@ If modFormater.convertCurrencyToValue(Me.tPaymentValue) > 0 Then
     invoice.addPayment invoicePayment
 End If
 
+MsgBox "La factura se registró con éxito", vbInformation
+
 Call imprimirFactura(invoice.id)
-
-MsgBox "fin"
-
+Unload Me
 End Sub
 
 Private Function saveInvoice() As cInvoice
@@ -798,47 +826,52 @@ Else
     "(id_client,date_invoice, total_value, residue_value) VALUES " & _
     "('" & Me.tIdClient & "',#" & modFormater.convertDateToAccesDate(Now) & "#," & modFormater.convertCurrencyToValue(Me.tTotalValue) & "," & modFormater.convertCurrencyToValue(Me.tResidueValue) & ")"
     
-    conBd.Execute (SQL)
+    Dim ncon As ADODB.Connection
+    Set ncon = modConexion.getNewConection
+    
+    ncon.Execute (SQL)
+    ncon.Close
     Sleep 800
-    Set saveInvoice = Ap.cInvoice.findLastInvoice
+    Set saveInvoice = Ap.cInvoice.findInvoiceById(Val(Me.tIdInvoice))
 End If
 End Function
 
 Private Function validateOrRegisterClient()
+If (Me.tDocument = "") Then
+    MsgBox "Debe ingresar el documento del cliente", vbCritical
+    Me.tDocument.SetFocus
+    Exit Function
+End If
+
+If (Me.tName = "") Then
+    MsgBox "Debe ingresar el nombre del cliente", vbCritical
+    Me.tName.SetFocus
+    Exit Function
+End If
+
+If (Me.tPhone = "") Then
+    MsgBox "Debe ingresar el teléfono del cliente", vbCritical
+    Me.tPhone.SetFocus
+    Exit Function
+End If
+    
 Dim client As cClient
 Set client = Ap.cClient.findByDocument(Me.tDocument)
 validateOrRegisterClient = False
 
 If client Is Nothing Then
-    'Si el cliente no existe valida que se pueda registrar
-    
-    If (Me.tDocument = "") Then
-        MsgBox "Debe ingresar el documento del cliente", vbCritical
-        Me.tDocument.SetFocus
-        Exit Function
-    End If
-    
-    If (Me.tName = "") Then
-        MsgBox "Debe ingresar el nombre del cliente", vbCritical
-        Me.tName.SetFocus
-        Exit Function
-    End If
-    
-    If (Me.tPhone = "") Then
-        MsgBox "Debe ingresar el teléfono del cliente", vbCritical
-        Me.tPhone.SetFocus
-        Exit Function
-    End If
-    
     'Si se cumplen las validaciones se procede a crear el cliente
     SQL = "INSERT INTO client " & _
     "(document, name, phone) VALUES " & _
     "('" & Me.tDocument & "','" & Me.tName & "','" & Me.tPhone & "')"
     conBd.Execute (SQL)
     Sleep 800
-    
-    Set client = Ap.cClient.findByDocument(Me.tDocument)
+Else
+    SQL = "Update client set name='" & Me.tName & "', phone='" & Me.tPhone & "' where document='" & Me.tDocument & "'"
+    conBd.Execute (SQL)
 End If
+
+Set client = Ap.cClient.findByDocument(Me.tDocument)
 
 If client Is Nothing Then
     MsgBox "Error inesperado. No se pudo crear o cargar el cliente", vbCritical, "Error Administrador"
@@ -875,12 +908,19 @@ Set lastInvoice = Ap.cInvoice.findLastInvoice
 If lastInvoice Is Nothing Then
     Me.tIdInvoice = 1
 Else
-    Me.tIdInvoice = lastInvoice.id
+    Me.tIdInvoice = lastInvoice.id + 1
 End If
 Me.tIdInvoice = Format(Me.tIdInvoice, "0000")
 
 Me.Top = frmMenu.source.Top
 Me.left = frmMenu.source.left
+
+paymentValue = 0
+netValue = 0
+residueValueTotal = 0
+changeValue = 0
+residueValue = 0
+Me.tDateInvoice = modFormater.convertDateTime(Now)
 
 existInvoice = False
 End Sub
@@ -890,6 +930,12 @@ Private Function createConexion()
 Set conBd = modConexion.getNewConection
 rec.CursorLocation = adUseClient
 End Function
+
+Private Sub Form_Unload(Cancel As Integer)
+If Not Me.parent Is Nothing Then
+    Me.parent.refreshList
+End If
+End Sub
 
 Private Sub listData_KeyDown(KeyCode As Integer, Shift As Integer)
 If (KeyCode = 46 And Not Me.listData.SelectedItem Is Nothing) Then
@@ -974,9 +1020,15 @@ Next
 Me.tTotalValue = modFormater.convertValueToCurrency(netValue, 0)
 
 paymentValue = modFormater.convertCurrencyToValue(Me.tPaymentValue)
-changeValue = paymentValue - IIf(residueValueTotal > 0, residueValueTotal, netValue)
+If residueValueTotal > 0 Then
+    residueValue = netValue - (netValueOrg - residueValueTotal) - paymentValue
+    changeValue = paymentValue - (netValue - (netValueOrg - residueValueTotal))
+Else
+    changeValue = paymentValue - netValue
+    residueValue = netValue - paymentValue
+End If
+
 changeValue = IIf(changeValue < 0, 0, changeValue)
-residueValue = IIf(residueValueTotal > 0, residueValueTotal, netValue) - paymentValue
 residueValue = IIf(residueValue < 0, 0, residueValue)
 
 Me.tChangeValue = modFormater.convertValueToCurrency(changeValue, 0)
@@ -1009,7 +1061,26 @@ End Sub
 Public Sub loadInvoice(invoice As cInvoice)
 Me.tIdInvoice = Format(invoice.id, "0000")
 residueValueTotal = invoice.residue_value
+netValueOrg = invoice.total_value
 Me.tResidueValueTotal = modFormater.convertValueToCurrency(residueValueTotal, 0)
+Me.tDateInvoice = modFormater.convertDateTime(invoice.date_invoice)
+
+'Ajuste de botones
+If residueValueTotal = 0 Then
+    'Desactiva todos los campos que permitan una edición de la factura
+    Me.tName.Locked = True
+    Me.tDocument.Locked = True
+    Me.tPhone.Locked = True
+    Me.tDescription.Locked = True
+    Me.tValue.Locked = True
+    Me.tPaymentValue.Enabled = False
+    Me.listData.Enabled = False
+    Me.cmdFinish.Visible = False
+    
+    Me.cmdAdd.Visible = False
+    Me.cmdPrint.left = Me.cmdExit.left
+    Me.cmdExit.left = Me.cmdFinish.left
+End If
 
 Dim client As cClient
 Set client = invoice.getClient()

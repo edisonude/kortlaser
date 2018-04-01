@@ -19,6 +19,7 @@ Form=frmClient.frm
 Form=frmClientDetail.frm
 Startup="frmMenu"
 HelpFile=""
+ExeName32="Kortlaser.exe"
 Command32=""
 Name="Kortlaser"
 HelpContextID="0"

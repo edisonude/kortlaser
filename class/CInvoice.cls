@@ -51,6 +51,28 @@ Set findLastInvoice = invoice
 rec.Close
 End Function
 
+'Encuentra una factura por su id
+Public Function findInvoiceById(id As Integer) As cInvoice
+Dim conBd As ADODB.Connection
+Dim rec As New ADODB.Recordset
+
+'Se solicita una conexion a la bd
+Set conBd = modConexion.getNewConection
+rec.CursorLocation = adUseClient
+
+rec.Open "Select * from invoice where id=" & id & "", conBd, adOpenStatic, adLockOptimistic
+
+Dim invoice As cInvoice
+If (rec.RecordCount >= 1) Then
+    Set invoice = New cInvoice
+    Call invoice.loadInvoice(rec("id"), rec("id_client"), rec("date_invoice"), rec("total_value"), rec("residue_value"))
+End If
+
+Set findInvoiceById = invoice
+rec.Close
+conBd.Close
+End Function
+
 Public Sub addDetail(detail As cInvoiceDetail)
 Dim conBd As ADODB.Connection
 'Se solicita una conexion a la bd
